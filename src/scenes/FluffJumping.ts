@@ -78,6 +78,9 @@ export class FluffJumping extends Phaser.Scene {
   private isGenerating: boolean = false;
   private button!: ButtonText;
   private timedEvent!: Phaser.Time.TimerEvent;
+  private speed = 600;
+  private toys!: Phaser.Physics.Arcade.Sprite;
+  // private bullet!: Phaser.Physics.Arcade.Sprite;
 
   constructor() {
     super({ key: "fluff-jumping" });
@@ -88,15 +91,16 @@ export class FluffJumping extends Phaser.Scene {
     this.load.image("cannon", "asset/img/arma.png");
     this.load.image("background", "asset/img/background.png");
     this.load.atlas("toys", "asset/toys.png", "asset/toys.json");
+    this.load.image("bullet", "asset/img/bullet.png");
   }
 
   public create() {
     this.createBackground();
     this.createCannon();
     this.createLine();
-    this.createButton();
-
+    this.createButtons();
     this.onPointerMove();
+    this.onPointerDown();
   }
 
   private createBackground() {
@@ -119,6 +123,20 @@ export class FluffJumping extends Phaser.Scene {
     this.graphics = graphics;
     this.line = line;
   }
+  private createBullet() {
+    const bullet = this.physics.add.sprite(
+      this.cameras.main.width / 2,
+      this.cameras.main.height - 100,
+      "bullet"
+    );
+
+    this.physics.world.disable(bullet);
+
+    bullet.setScale(0.4);
+
+    return bullet;
+  }
+
   private createCannon() {
     const cannon = this.add.image(
       this.cameras.main.width / 2,
@@ -133,35 +151,45 @@ export class FluffJumping extends Phaser.Scene {
     const frame = `${generateRandomNumber(1, 7)}.png`;
     const toys = this.physics.add.sprite(toysX, toysY, "toys", frame);
 
+    // detecta collision
+    this.physics.world.enable(toys);
+
+    const randomMass = generateRandomNumber(1, 5);
+    toys.setMass(randomMass);
+
+    const randomRotationDegrees = generateRandomNumber(-80, 80);
+    const randomRotationRadians = Phaser.Math.DegToRad(randomRotationDegrees);
+
+    toys.setRotation(randomRotationRadians);
+
     toys.setInteractive({ useHandCursor: true });
     toys.setScale(0.3);
 
-    toys.on("pointerdown", () => {
-      this.physics.pause();
-      console.log("Debuto con:", frame);
-      this.stopAnimation();
+    // toys.on("pointerdown", () => {
+    //   this.physics.pause();
+    //   console.log("Debuto con:", frame);
+    //   this.stopAnimation();
 
-      setTimeout(() => {
-        this.runAnimation();
-        this.physics.resume();
-      }, 5000);
-    });
+    //   setTimeout(() => {
+    //     this.runAnimation();
+    //     this.physics.resume();
+    //   }, 2000);
+    // });
 
     this.physics.world.enable(toys);
     toys.enableBody(true, toysX, toysY, true, true);
+    this.toys = toys;
 
     return toys;
   }
 
   private startGenerate() {
-    // this.time.delayedCall(TIME_TO_GENERATE, () => this.startGenerate())
     this.startAnimation();
 
     this.timedEvent = this.time.addEvent({
       delay: TIME_TO_GENERATE,
       callback: this.startAnimation,
       callbackScope: this,
-      //  repeat: 10,
       loop: true,
     });
   }
@@ -213,12 +241,40 @@ export class FluffJumping extends Phaser.Scene {
 
     const ball = this.createToys(ballX, ballY);
 
-    const speed = 600;
+    // const speed = 600;
     this.physics.velocityFromRotation(
       angleToCenter,
-      speed,
+      this.speed,
       ball.body?.velocity
     );
+
+    const randomRotationDegrees = generateRandomNumber(-40, 40);
+
+    this.tweens.add({
+      targets: ball.body,
+      angularVelocity: randomRotationDegrees,
+      duration: 2000,
+      ease: "Linear",
+      // onComplete: () => {
+      //   ball.destroy(); // Elimina el sprite después de la animación
+      // },
+    });
+  }
+
+  private startAnimationBullet() {
+    const bullet = this.createBullet();
+
+    this.physics.world.enable(bullet);
+    bullet.enableBody(true, this.cannon.x, this.cannon.y - 50, true, true);
+    this.physics.add.collider(bullet, this.toys, () => {
+      this.toys.destroy();
+      bullet.destroy();
+    });
+    this.physics.velocityFromRotation(this.angle, 600, bullet.body?.velocity);
+  }
+
+  private onPointerDown() {
+    this.input.on("pointerdown", () => this.startAnimationBullet());
   }
 
   private runAnimation() {
@@ -233,7 +289,7 @@ export class FluffJumping extends Phaser.Scene {
     this.button?.setLabelButton("Play Game");
   }
 
-  private createButton() {
+  private createButtons() {
     const button = new ButtonText(this, 60, 30);
 
     button.onClick(() => {
