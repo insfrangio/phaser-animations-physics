@@ -66,6 +66,9 @@ class ButtonText extends Phaser.GameObjects.Container {
 
 const TIME_TO_GENERATE = 2000;
 
+function generateRandomNumber(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 export class FluffJumping extends Phaser.Scene {
   private cannon!: Phaser.GameObjects.Image;
   private line!: Phaser.Geom.Line;
@@ -84,6 +87,7 @@ export class FluffJumping extends Phaser.Scene {
     this.load.image("ball", "asset/img/ball.png");
     this.load.image("cannon", "asset/img/arma.png");
     this.load.image("background", "asset/img/background.png");
+    this.load.atlas("toys", "asset/toys.png", "asset/toys.json");
   }
 
   public create() {
@@ -125,14 +129,28 @@ export class FluffJumping extends Phaser.Scene {
     this.cannon = cannon;
   }
 
-  private createBall(ballX: number, ballY: number) {
-    const ball = this.physics.add.sprite(ballX, ballY, "ball");
-    ball.setScale(0.5);
+  private createToys(toysX: number, toysY: number) {
+    const frame = `${generateRandomNumber(1, 7)}.png`;
+    const toys = this.physics.add.sprite(toysX, toysY, "toys", frame);
 
-    this.physics.world.enable(ball);
-    ball.enableBody(true, ballX, ballY, true, true);
+    toys.setInteractive({ useHandCursor: true });
+    toys.setScale(0.3);
 
-    return ball;
+    toys.on("pointerdown", () => {
+      this.physics.pause();
+      console.log("Debuto con:", frame);
+      this.stopAnimation();
+
+      setTimeout(() => {
+        this.runAnimation();
+        this.physics.resume();
+      }, 5000);
+    });
+
+    this.physics.world.enable(toys);
+    toys.enableBody(true, toysX, toysY, true, true);
+
+    return toys;
   }
 
   private startGenerate() {
@@ -193,7 +211,7 @@ export class FluffJumping extends Phaser.Scene {
       centerY
     );
 
-    const ball = this.createBall(ballX, ballY);
+    const ball = this.createToys(ballX, ballY);
 
     const speed = 600;
     this.physics.velocityFromRotation(
@@ -203,21 +221,28 @@ export class FluffJumping extends Phaser.Scene {
     );
   }
 
+  private runAnimation() {
+    this.isGenerating = true;
+    this.button?.setLabelButton("Stop");
+    this.startGenerate();
+  }
+
+  private stopAnimation() {
+    this.timedEvent?.remove();
+    this.isGenerating = false;
+    this.button?.setLabelButton("Play Game");
+  }
+
   private createButton() {
     const button = new ButtonText(this, 60, 30);
 
     button.onClick(() => {
       if (!this.isGenerating) {
-        this.isGenerating = true;
-        this.button?.setLabelButton("Stop");
-        this.startGenerate();
-
+        this.runAnimation();
         return;
       }
 
-      this.timedEvent?.remove();
-      this.isGenerating = false;
-      this.button?.setLabelButton("Play Game");
+      this.stopAnimation();
     });
 
     this.button = button;
