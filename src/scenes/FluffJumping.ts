@@ -92,9 +92,17 @@ export class FluffJumping extends Phaser.Scene {
     this.load.image("background", "asset/img/background.png");
     this.load.atlas("toys", "asset/toys.png", "asset/toys.json");
     this.load.image("bullet", "asset/img/bullet.png");
+    this.load.atlas("bomb", "asset/bomb/bomb.png", "asset/bomb/bomb.json");
+    this.load.atlas("hit", "asset/hit/hit.png", "asset/hit/hit.json");
+    this.load.atlas(
+      "hit_balloon",
+      "asset/hit_balloon/hit_balloon.png",
+      "asset/hit_balloon/hit_balloon.json"
+    );
   }
 
   public create() {
+    this.createFrames();
     this.createBackground();
     this.createCannon();
     this.createLine();
@@ -123,6 +131,7 @@ export class FluffJumping extends Phaser.Scene {
     this.graphics = graphics;
     this.line = line;
   }
+
   private createBullet() {
     const bullet = this.physics.add.sprite(
       this.cameras.main.width / 2,
@@ -147,6 +156,38 @@ export class FluffJumping extends Phaser.Scene {
     this.cannon = cannon;
   }
 
+  private createFrames() {
+    this.anims.create({
+      key: "hit",
+      frames: this.anims.generateFrameNames("hit", {
+        start: 0,
+        end: 23,
+      }),
+      frameRate: 24,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "hit_balloon",
+      frames: this.anims.generateFrameNames("hit_balloon", {
+        start: 0,
+        end: 23,
+      }),
+      frameRate: 24,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "bomb",
+      frames: this.anims.generateFrameNames("bomb", {
+        start: 0,
+        end: 23,
+      }),
+      frameRate: 24,
+      repeat: 0,
+    });
+  }
+
   private createToys(toysX: number, toysY: number) {
     const frame = `${generateRandomNumber(1, 7)}.png`;
     const toys = this.physics.add.sprite(toysX, toysY, "toys", frame);
@@ -161,6 +202,7 @@ export class FluffJumping extends Phaser.Scene {
     const randomRotationRadians = Phaser.Math.DegToRad(randomRotationDegrees);
 
     toys.setRotation(randomRotationRadians);
+    console.log("ue?");
 
     toys.setInteractive({ useHandCursor: true });
     toys.setScale(0.3);
@@ -175,6 +217,27 @@ export class FluffJumping extends Phaser.Scene {
     //     this.physics.resume();
     //   }, 2000);
     // });
+    toys.on("pointerdown", () => {
+      const isBomb = generateRandomNumber(0, 1);
+      const hitFrame =
+        frame === "1.png" ? "hit_balloon" : !isBomb ? "hit" : "bomb";
+
+      toys.setScale(0.4);
+
+      this.physics.pause();
+      toys.anims.play(hitFrame);
+
+      toys.on("animationcomplete", () => {
+        toys.destroy();
+      });
+
+      this.stopAnimation();
+
+      setTimeout(() => {
+        this.runAnimation();
+        this.physics.resume();
+      }, 1000);
+    });
 
     this.physics.world.enable(toys);
     toys.enableBody(true, toysX, toysY, true, true);
