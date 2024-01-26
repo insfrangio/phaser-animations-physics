@@ -33,21 +33,96 @@ export class ZombieScene extends Phaser.Scene {
       ["asset/zombie/boy_spine/spineboy.atlas"],
       true
     );
+
+    this.load.multiatlas(
+      "zombie_sprite",
+      "asset/zombie/test_sprite/zombie_test.json",
+      "asset/zombie/test_sprite/"
+    );
   }
 
   public create() {
-    this.createBackground();
+    // this.createBackground();
     this.createSpriteSheet();
-
+    // this.createSpine();
     // this.createCannon();
     // this.createBall();
     // this.createLine();
-
     // this.onPointerMove();
     // this.onPointerDown();
+
+    const text = this.add.text(100, 100, "0 FPS", {
+      fontSize: 32,
+    });
+
+    setInterval(() => {
+      // console.log();
+      text.setText(String(this.game.loop.actualFps));
+    }, 1000);
   }
 
   private createSpriteSheet() {
+    let middle = 400;
+    let columns = 8;
+    let perRow = 62; // 62
+    let scale = 0.01;
+    let moveX = 200 * scale;
+    let moveY = 300;
+
+    const configLoop3 = {
+      key: "loop",
+      frames: this.anims.generateFrameNumbers("zombie_sprite", {
+        // frames: [0, 1, 2, 3],
+        start: 0,
+        end: 47,
+      }),
+      frameRate: 30,
+      repeat: -1,
+    };
+
+    this.anims.create(configLoop3);
+
+    for (let col = 0; col < columns; col++) {
+      this.add.sprite(middle, moveY, "flower").setScale(scale);
+
+      for (let row = 1; row < perRow / 2; row++) {
+        let x = middle + row * moveX;
+
+        const sprite = this.add.sprite(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2,
+          "zombie_sprite"
+        );
+
+        sprite.play("loop");
+        sprite.setPosition(x, moveY);
+        sprite.setScale(scale);
+      }
+
+      for (let row = 1; row < perRow / 2; row++) {
+        let x = middle - row * moveX;
+
+        const sprite = this.add.sprite(
+          this.cameras.main.width / 2,
+          this.cameras.main.height / 2,
+          "zombie_sprite"
+        );
+
+        sprite.play("loop");
+        sprite.setPosition(x, moveY);
+        sprite.setScale(scale);
+      }
+
+      scale += 0.025;
+      moveX = 200 * scale;
+      moveY += 300 * scale;
+      perRow -= 4;
+    }
+
+    // sprite.play("zombie_sprite");
+  }
+
+  private createSpine() {
     let middle = 400;
     let columns = 8;
     let perRow = 62; // 62
