@@ -8,7 +8,7 @@ export const scenes = [ZombieScene, FluffJumping, GunShot, GameScene];
 
 export const phaser = new Phaser.Game({
   backgroundColor: "#000000",
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   parent: "game-container",
   scale: { mode: Phaser.Scale.FIT },
   physics: {

@@ -1,5 +1,9 @@
 import Phaser from "phaser";
 
+const ASSETS_COUNT = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+  // 11, 12, 13, 14, 15, 16, 17, 18, 19,
+];
 export class ZombieScene extends Phaser.Scene {
   private ball!: Phaser.Physics.Arcade.Sprite;
   private cannon!: Phaser.GameObjects.Image;
@@ -27,6 +31,23 @@ export class ZombieScene extends Phaser.Scene {
       true
     );
 
+    // ASSETS_COUNT.forEach((_, idx) => {
+    //   this.load.multiatlas(
+    //     `${idx + 1}`,
+    //     `asset/zombie/test_sprite${idx + 1}/zombie_test.json`,
+    //     `asset/zombie/test_sprite${idx + 1}/`
+    //   );
+    // });
+
+    ASSETS_COUNT.forEach((_, idx) => {
+      this.load.spine(
+        `${idx + 1}`,
+        `asset/zombie/test_spine${idx + 1}/zombie_1_test.json`,
+        [`asset/zombie/test_spine${idx + 1}/zombie_1_test.atlas`],
+        true
+      );
+    });
+
     this.load.spine(
       "boySpine",
       "asset/zombie/boy_spine/spineboy.json",
@@ -43,8 +64,8 @@ export class ZombieScene extends Phaser.Scene {
 
   public create() {
     // this.createBackground();
-    this.createSpriteSheet();
-    // this.createSpine();
+    // this.createSpriteSheet();
+    this.createSpine();
     // this.createCannon();
     // this.createBall();
     // this.createLine();
@@ -63,24 +84,25 @@ export class ZombieScene extends Phaser.Scene {
 
   private createSpriteSheet() {
     let middle = 400;
-    let columns = 8;
+    let columns = 4;
     let perRow = 62; // 62
     let scale = 0.01;
     let moveX = 200 * scale;
     let moveY = 300;
 
-    const configLoop3 = {
-      key: "loop",
-      frames: this.anims.generateFrameNumbers("zombie_sprite", {
-        // frames: [0, 1, 2, 3],
-        start: 0,
-        end: 47,
-      }),
-      frameRate: 30,
-      repeat: -1,
-    };
+    ASSETS_COUNT.forEach((_, idx) => {
+      const configLoop3 = {
+        key: `loop${idx + 1}`,
+        frames: this.anims.generateFrameNumbers(`${idx + 1}`, {
+          start: 0,
+          end: 47,
+        }),
+        frameRate: 30,
+        repeat: -1,
+      };
 
-    this.anims.create(configLoop3);
+      this.anims.create(configLoop3);
+    });
 
     for (let col = 0; col < columns; col++) {
       this.add.sprite(middle, moveY, "flower").setScale(scale);
@@ -88,13 +110,15 @@ export class ZombieScene extends Phaser.Scene {
       for (let row = 1; row < perRow / 2; row++) {
         let x = middle + row * moveX;
 
+        const counter = col + 1;
+
         const sprite = this.add.sprite(
           this.cameras.main.width / 2,
           this.cameras.main.height / 2,
-          "zombie_sprite"
+          `${counter}`
         );
 
-        sprite.play("loop");
+        sprite.play(`loop${counter}`);
         sprite.setPosition(x, moveY);
         sprite.setScale(scale);
       }
@@ -102,13 +126,15 @@ export class ZombieScene extends Phaser.Scene {
       for (let row = 1; row < perRow / 2; row++) {
         let x = middle - row * moveX;
 
+        const counter = col + 1;
+
         const sprite = this.add.sprite(
           this.cameras.main.width / 2,
           this.cameras.main.height / 2,
-          "zombie_sprite"
+          `${counter}`
         );
 
-        sprite.play("loop");
+        sprite.play(`loop${counter}`);
         sprite.setPosition(x, moveY);
         sprite.setScale(scale);
       }
@@ -139,7 +165,7 @@ export class ZombieScene extends Phaser.Scene {
         const zombie1 = this.add.spine(
           400,
           600,
-          "zombieSpine",
+          String(col + 1),
           "animation",
           true
         );
@@ -153,7 +179,7 @@ export class ZombieScene extends Phaser.Scene {
         const zombie1 = this.add.spine(
           400,
           600,
-          "zombieSpine",
+          String(col + 1),
           "animation",
           true
         );
