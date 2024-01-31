@@ -1,10 +1,17 @@
 import { FluffJumping } from "./scenes/FluffJumping";
 import { GameScene } from "./scenes/GameScene";
 import { GunShot } from "./scenes/GunShot";
+import { GunShotCollision } from "./scenes/GunShotCollision";
 import { ZombieScene } from "./scenes/Zombie";
 import "phaser/plugins/spine/dist/SpinePlugin";
 
-export const scenes = [ZombieScene, FluffJumping, GunShot, GameScene];
+export const scenes = [
+  GunShotCollision,
+  GunShot,
+  ZombieScene,
+  FluffJumping,
+  GameScene,
+];
 
 export const phaser = new Phaser.Game({
   backgroundColor: "#000000",
@@ -15,7 +22,7 @@ export const phaser = new Phaser.Game({
     default: "arcade",
     arcade: {
       debug: true,
-      gravity: { y: 300 },
+      // gravity: { y: 300 },
     },
   },
   plugins: {
